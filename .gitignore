@@ -1,0 +1,8 @@
+dist/
+node_modules/
+reports/coverage
+reports/junit.xml
+coverage/
+.npmrc
+*-v8.log
+*.scratch.ts

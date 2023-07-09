@@ -1,0 +1,96 @@
+variables:
+  npm_config_cache: '/var/cache/ci/npm'
+
+stages:
+  - test
+  - publish
+
+publish:
+  stage: publish
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+.\d+.\d+/
+  image: node:18
+  script:
+    - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> .npmrc
+    - npm config set update-notifier false
+    - npm config set cache /var/cache/ci/npm --global
+    - npm clean-install --no-audit --no-fund
+    - npm publish --access public
+  when: manual
+
+jest:
+  stage: test
+  image: node:18
+  only:
+    - merge_requests
+    - main
+    - tags
+  artifacts:
+    paths:
+      - reports
+    reports:
+      junit: reports/junit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: reports/coverage/cobertura-coverage.xml
+  coverage: /All\sfiles.*?\s+(\d+.\d+)/
+  script:
+    - npm config set cache /var/cache/ci/npm --global
+    - npm config set update-notifier false
+    - npm clean-install --no-audit --no-fund --no-update-notifier
+    - npm run test:coverage
+
+commitlint:
+  stage: test
+  image: ${CI_REGISTRY}/docker/commitlint:18.10.0
+  only:
+    - merge_requests
+  script:
+    - git fetch origin ${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}:${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}
+    - |
+      git log \
+        --no-merges \
+        --pretty='format:%h %s' \
+        ^${CI_MERGE_REQUEST_TARGET_BRANCH_NAME} \
+        HEAD | while read line || [[ -n $line ]]; do \
+          echo "👓 Checking ${line}"; echo "${line:8}" | commitlint || true; true; \
+        done;
+
+.sonarqube:
+  stage: test
+  needs:
+    - jest
+  image:
+    name: sonarsource/sonar-scanner-cli:latest
+    entrypoint: ['']
+  variables:
+    SONAR_USER_HOME: '${CI_PROJECT_DIR}/.sonar' # Defines the location of the analysis task cache
+    GIT_DEPTH: '0' # Tells git to fetch all the branches of the project, required by the analysis task
+  cache:
+    key: '${CI_JOB_NAME}'
+    paths:
+      - .sonar/cache
+  tags:
+    - sonarqube
+
+sonarqube-mr:
+  extends: .sonarqube
+  script:
+    - |
+      sonar-scanner \
+          -Dsonar.pullrequest.key=${CI_MERGE_REQUEST_IID} \
+          -Dsonar.pullrequest.branch=${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME} \
+          -Dsonar.pullrequest.base=${CI_MERGE_REQUEST_TARGET_BRANCH_NAME} \
+          || true
+  allow_failure: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ /^feature\//
+
+sonarqube-branch:
+  extends: .sonarqube
+  script:
+    - sonar-scanner || true
+  allow_failure: true
+  only:
+    - main
+    - development
