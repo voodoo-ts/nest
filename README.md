@@ -104,7 +104,7 @@ their Swagger types and documentation. It's still recommended to enable the swag
 the class-validator shims
 
 ```json
-// nest-cli-json
+// nest-cli.json
 {
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
