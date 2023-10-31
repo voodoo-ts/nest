@@ -59,7 +59,7 @@ export class SwaggerVoodoo {
           {
             record: 'object',
             // eslint-disable-next-line id-blacklist
-            number: 'integer',
+            number: 'number',
           }[node.kind as string] ?? node.kind;
         return { type: mappedType };
       }
@@ -272,6 +272,11 @@ function getConstratintsFromDecorators(tree: RootNode): Partial<ApiPropertyOptio
       options.minimum = min;
       options.maximum = max;
     }
+
+    if (constraints['@IsInteger']) {
+      options.type = 'integer';
+    }
+
     if (constraints['@Length']) {
       const { min, max } = constraints['@Length'];
       console.log('@Length', node.kind, hasNode(tree, 'string'), hasNode(tree, 'array'));
