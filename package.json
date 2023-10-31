@@ -20,9 +20,6 @@
     "release:beta": "microrelease beta"
   },
   "dependencies": {
-    "@nestjs/common": "^10.0.3",
-    "@nestjs/swagger": "^7.0.6",
-    "@nestjs/testing": "^10.0.3",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1"
   },
@@ -51,6 +48,9 @@
     "url": "https://github.com/voodoo-ts/nest"
   },
   "peerDependencies": {
-    "@voodoo-ts/voodoo-ts": "^0.8.4"
+    "@voodoo-ts/voodoo-ts": ">=0.9.0",
+    "@nestjs/common": ">=10.0.3",
+    "@nestjs/swagger": ">=7.0.6",
+    "@nestjs/testing": ">=10.0.3"
   }
 }
