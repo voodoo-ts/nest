@@ -71,7 +71,6 @@ class ApiModel {
 
   testPartial!: Partial<Embed>;
 
-  // testIntersection!: Embed & { password: string };
   testIntersection!: Embed & Password;
 
   testEnum!: TestEnum;
@@ -87,7 +86,7 @@ function getMetadata(cls: Constructor<unknown>, name: string) {
   return Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, cls.prototype, name);
 }
 
-describe('ConfigModule', () => {
+describe('OpenAPI', () => {
   it('should have added all properties to the class', () => {
     const propertiesArray = Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES_ARRAY, ApiModel.prototype);
     expect(propertiesArray).toEqual([
@@ -110,7 +109,7 @@ describe('ConfigModule', () => {
     ]);
   });
 
-  it('should', () => {
+  it('should generate correct schemas', () => {
     const props = transformer.getPropertyTypeTreesFromConstructor(ApiModel).map(({ name }) => name);
     const propData = Object.fromEntries(props.map((name) => [name, getMetadata(ApiModel, name)]));
     console.log(JSON.stringify(propData));
@@ -126,29 +125,32 @@ describe('ConfigModule', () => {
       testEmail: { type: 'string', required: true, format: 'email' },
       testRegex: { type: 'string', required: true, pattern: '/fooo/' },
       testFQDN: { type: 'string', required: true, format: 'hostname' },
-      testNumber: { type: 'integer', required: true, minimum: 9000, maximum: 9001 },
+      testNumber: { type: 'number', required: true, minimum: 9000, maximum: 9001 },
       testNullable: { type: 'string', required: true, nullable: true },
-      testUnion: { type: 'unknown', oneOf: [{ type: 'string' }, { type: 'integer' }], required: true },
-      testEmbed: { type: 'unknown', $ref: '#/components/schemas/Embed', required: true },
-      testPick: { type: 'unknown', $ref: '#/components/schemas/Pick<Embed, name>', required: true },
-      testOmit: { type: 'unknown', $ref: '#/components/schemas/Omit<Embed, name>', required: true },
-      testPartial: { type: 'unknown', $ref: '#/components/schemas/Partial<Embed>', required: true },
+      testUnion: { type: 'unknown', oneOf: [{ type: 'string' }, { type: 'number' }], required: true },
+      testEmbed: { type: 'object', $ref: '#/components/schemas/Embed', required: true },
+      testPick: { type: 'object', $ref: '#/components/schemas/Pick<Embed, name>', required: true },
+      testOmit: { type: 'object', $ref: '#/components/schemas/Omit<Embed, name>', required: true },
+      testPartial: { type: 'object', $ref: '#/components/schemas/Partial<Embed>', required: true },
       testIntersection: {
         type: 'unknown',
-        allOf: [{ $ref: '#/components/schemas/Embed' }, { $ref: '#/components/schemas/Password' }],
+        allOf: [
+          { type: 'object', $ref: '#/components/schemas/Embed' },
+          { type: 'object', $ref: '#/components/schemas/Password' },
+        ],
         required: true,
       },
-      testEnum: { type: 'unknown', enumName: 'TestEnum', enum: ['test', 'bar'], required: true },
+      testEnum: { type: 'enum', enumName: 'TestEnum', enum: ['test', 'bar'], required: true },
       testArray: { type: 'array', items: { type: 'string' }, required: true, minItems: 5, maxItems: 10 },
-      testNumberArray: { type: 'array', items: { type: 'integer' }, required: true, minItems: 5, maxItems: 10 },
+      testNumberArray: { type: 'array', items: { type: 'number' }, required: true, minItems: 5, maxItems: 10 },
     });
   });
 
-  it('should', () => {
-    expect(swagger.additionalModels.map((cls) => cls.name)).toEqual([
-      'Pick<Embed, name>',
-      'Omit<Embed, name>',
-      'Partial<Embed>',
-    ]);
+  it('should track additional models', () => {
+    expect(new Set(swagger.additionalModels).size).toEqual(swagger.additionalModels.length);
+
+    expect(new Set(swagger.additionalModels.map((cls) => cls.name))).toEqual(
+      new Set(['Pick<Embed, name>', 'Omit<Embed, name>', 'Partial<Embed>', 'Embed', 'Password']),
+    );
   });
 });

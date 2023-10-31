@@ -161,9 +161,13 @@ export class SwaggerVoodoo {
       for (const { name, tree } of trees) {
         const apiModelProperties = Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, cls.prototype, name) ?? {};
 
-        const type = this.getType(tree as RootNode, (kind, node, cls, partialCls) => {
-          this.additionalModels.push(partialCls);
-          additionalModels.push(partialCls);
+        const type = this.getType(tree as RootNode, (kind, node, cls, schemaClass) => {
+          if (!this.additionalModels.includes(schemaClass)) {
+            this.additionalModels.push(schemaClass);
+          }
+          if (!additionalModels.includes(schemaClass)) {
+            additionalModels.push(schemaClass);
+          }
         });
         const mine: ApiPropertyOptions = {
           type: 'unknown',
