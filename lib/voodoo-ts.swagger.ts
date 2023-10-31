@@ -16,7 +16,7 @@ import {
 import { Constructor } from '@voodoo-ts/voodoo-ts/lib/types';
 
 type RegisterMappedType = (
-  type: 'partial' | 'pick' | 'omit',
+  type: 'partial' | 'pick' | 'omit' | 'class',
   node: ClassNode,
   cls: Constructor<unknown>,
   partialCls: Constructor<unknown>,
@@ -67,6 +67,7 @@ export class SwaggerVoodoo {
         return {
           enumName: node.name,
           enum: node.allowedValues,
+          type: 'enum',
         };
       }
       case 'union': {
@@ -78,7 +79,7 @@ export class SwaggerVoodoo {
             oneOf: unionWithoutNull,
           };
         } else {
-          return unionWithoutNull[0];
+          return { type: 'unknown', ...unionWithoutNull[0] };
         }
       }
       case 'class': {
@@ -98,6 +99,7 @@ export class SwaggerVoodoo {
           registerMappedType('partial', node, cls, PartialSchema);
 
           return {
+            type: 'object',
             $ref: getSchemaPath(PartialSchema),
           };
         } else if (node.meta.picked) {
@@ -108,9 +110,7 @@ export class SwaggerVoodoo {
             writable: false,
           });
           registerMappedType('pick', node, cls, PickSchema);
-          return {
-            $ref: getSchemaPath(PickSchema),
-          };
+          return { type: 'object', $ref: getSchemaPath(PickSchema) };
         } else if (node.meta.omitted) {
           const fields = Array.from(node.meta.omitted);
           class OmitSchema extends OmitType<any, string>(cls, fields) {}
@@ -119,12 +119,12 @@ export class SwaggerVoodoo {
             writable: false,
           });
           registerMappedType('omit', node, cls, OmitSchema);
-          return {
-            $ref: getSchemaPath(OmitSchema),
-          };
+          return { type: 'object', $ref: getSchemaPath(OmitSchema) };
         } else {
+          registerMappedType('class', node, cls, cls);
           return {
             $ref: getSchemaPath(cls),
+            type: 'object',
           };
         }
       }
