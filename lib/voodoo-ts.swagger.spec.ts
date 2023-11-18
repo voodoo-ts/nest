@@ -80,6 +80,14 @@ class ApiModel {
 
   @Length(5, 10)
   testNumberArray!: number[];
+
+  testStringLiteral!: 'lit';
+
+  testNumberLiteral!: 9001;
+
+  testBooleanLiteral!: true;
+
+  testNullLiteral!: null;
 }
 
 function getMetadata(cls: Constructor<unknown>, name: string) {
@@ -106,6 +114,10 @@ describe('OpenAPI', () => {
       ':testEnum',
       ':testArray',
       ':testNumberArray',
+      ':testStringLiteral',
+      ':testNumberLiteral',
+      ':testBooleanLiteral',
+      ':testNullLiteral',
     ]);
   });
 
@@ -158,6 +170,29 @@ describe('OpenAPI', () => {
         minItems: 5,
         maxItems: 10,
         isArray: false,
+      },
+      testStringLiteral: {
+        example: 'lit',
+        isArray: false,
+        pattern: '^lit$',
+        required: true,
+        type: 'string',
+      },
+      testNumberLiteral: {
+        example: 9001,
+        isArray: false,
+        required: true,
+        type: 'number',
+      },
+      testBooleanLiteral: {
+        example: true,
+        isArray: false,
+        required: true,
+        type: 'boolean',
+      },
+      testNullLiteral: {
+        nullable: true,
+        required: true,
       },
     });
   });

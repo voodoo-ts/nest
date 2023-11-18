@@ -52,7 +52,6 @@ export class SwaggerVoodoo {
       case 'string':
       case 'number':
       case 'boolean':
-      case 'literal':
       case 'record':
       case 'any': {
         const mappedType =
@@ -63,6 +62,26 @@ export class SwaggerVoodoo {
           }[node.kind as string] ?? node.kind;
         return { type: mappedType };
       }
+      case 'literal':
+        const type = ['string', 'number', 'boolean'].includes(typeof node.expected) ? typeof node.expected : null;
+        if (!type) {
+          return {
+            type: undefined,
+          };
+        }
+
+        if (type === 'string') {
+          return {
+            type: 'string',
+            pattern: `^${node.expected}$`,
+            example: node.expected,
+          };
+        }
+
+        return {
+          type,
+          example: node.expected,
+        };
       case 'enum': {
         return {
           enumName: node.name,
