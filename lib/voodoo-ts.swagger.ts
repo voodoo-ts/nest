@@ -181,13 +181,6 @@ export class SwaggerVoodoo {
           ...getConstratintsFromDecorators(tree as RootNode),
         };
 
-        Reflect.defineMetadata(
-          DECORATORS.API_MODEL_PROPERTIES,
-          { ...mine, ...apiModelProperties },
-          cls.prototype,
-          name,
-        );
-
         ApiProperty({ ...mine, ...apiModelProperties })(cls.prototype, name);
 
         const propertiesArray = (Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES_ARRAY, cls.prototype) ??
