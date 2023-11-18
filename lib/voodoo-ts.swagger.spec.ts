@@ -112,7 +112,7 @@ describe('OpenAPI', () => {
   it('should generate correct schemas', () => {
     const props = transformer.getPropertyTypeTreesFromConstructor(ApiModel).map(({ name }) => name);
     const propData = Object.fromEntries(props.map((name) => [name, getMetadata(ApiModel, name)]));
-    console.log(JSON.stringify(propData));
+
     expect(propData).toEqual({
       testString: {
         type: 'string',
@@ -120,18 +120,19 @@ describe('OpenAPI', () => {
         description: 'This is a test string',
         required: true,
         minLength: 1,
+        isArray: false,
       },
-      testUrl: { type: 'string', required: true, format: 'url' },
-      testEmail: { type: 'string', required: true, format: 'email' },
-      testRegex: { type: 'string', required: true, pattern: '/fooo/' },
-      testFQDN: { type: 'string', required: true, format: 'hostname' },
-      testNumber: { type: 'number', required: true, minimum: 9000, maximum: 9001 },
-      testNullable: { type: 'string', required: true, nullable: true },
-      testUnion: { type: 'unknown', oneOf: [{ type: 'string' }, { type: 'number' }], required: true },
-      testEmbed: { type: 'object', $ref: '#/components/schemas/Embed', required: true },
-      testPick: { type: 'object', $ref: '#/components/schemas/Pick<Embed, name>', required: true },
-      testOmit: { type: 'object', $ref: '#/components/schemas/Omit<Embed, name>', required: true },
-      testPartial: { type: 'object', $ref: '#/components/schemas/Partial<Embed>', required: true },
+      testUrl: { type: 'string', required: true, format: 'url', isArray: false },
+      testEmail: { type: 'string', required: true, format: 'email', isArray: false },
+      testRegex: { type: 'string', required: true, pattern: '/fooo/', isArray: false },
+      testFQDN: { type: 'string', required: true, format: 'hostname', isArray: false },
+      testNumber: { type: 'number', required: true, minimum: 9000, maximum: 9001, isArray: false },
+      testNullable: { type: 'string', required: true, nullable: true, isArray: false },
+      testUnion: { type: 'unknown', oneOf: [{ type: 'string' }, { type: 'number' }], required: true, isArray: false },
+      testEmbed: { type: 'object', $ref: '#/components/schemas/Embed', required: true, isArray: false },
+      testPick: { type: 'object', $ref: '#/components/schemas/Pick<Embed, name>', required: true, isArray: false },
+      testOmit: { type: 'object', $ref: '#/components/schemas/Omit<Embed, name>', required: true, isArray: false },
+      testPartial: { type: 'object', $ref: '#/components/schemas/Partial<Embed>', required: true, isArray: false },
       testIntersection: {
         type: 'unknown',
         allOf: [
@@ -139,10 +140,25 @@ describe('OpenAPI', () => {
           { type: 'object', $ref: '#/components/schemas/Password' },
         ],
         required: true,
+        isArray: false,
       },
-      testEnum: { type: 'enum', enumName: 'TestEnum', enum: ['test', 'bar'], required: true },
-      testArray: { type: 'array', items: { type: 'string' }, required: true, minItems: 5, maxItems: 10 },
-      testNumberArray: { type: 'array', items: { type: 'number' }, required: true, minItems: 5, maxItems: 10 },
+      testEnum: { type: 'string', enumName: 'TestEnum', enum: ['test', 'bar'], required: true, isArray: false },
+      testArray: {
+        type: 'array',
+        items: { type: 'string' },
+        required: true,
+        minItems: 5,
+        maxItems: 10,
+        isArray: false,
+      },
+      testNumberArray: {
+        type: 'array',
+        items: { type: 'number' },
+        required: true,
+        minItems: 5,
+        maxItems: 10,
+        isArray: false,
+      },
     });
   });
 
