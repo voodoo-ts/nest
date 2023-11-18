@@ -87,7 +87,11 @@ export class SwaggerVoodoo {
         const cls = this.transformer.getClassByReference(ref);
 
         if (!cls) {
-          throw new Error('');
+          // Materialize object literals and intterfaces
+          if (node.meta.from === 'object' || node.meta.from === 'interface') {
+            throw new Error(`Object literals and interfaces are not supported at the moment`);
+          }
+          throw new Error(`Could not resolve class for ref ${ref}`);
         }
 
         if (node.meta.partial) {
