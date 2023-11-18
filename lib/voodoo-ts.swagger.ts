@@ -154,7 +154,6 @@ export class SwaggerVoodoo {
 
   apiModel(): ClassDecorator {
     return (target: object): void => {
-      console.log('@ApiModel', target, target.constructor);
       const cls = target as Constructor<unknown>;
       const additionalModels: Constructor<unknown>[] = [];
       const trees = this.transformer.getClassNode(cls).getClassTrees();
@@ -176,59 +175,6 @@ export class SwaggerVoodoo {
           ...getRequiredAndNullable(tree as RootNode),
           ...getConstratintsFromDecorators(tree as RootNode),
         };
-
-        // console.log({
-        //   c: getAllPropertyValidataorMetadataMappings(tree),
-        //   hasString: hasNode(tree, 'string'),
-        //   hasArray: hasNode(tree, 'array'),
-        // });
-
-        // const nodesWithConstraints = getAllPropertyValidataorMetadataMappings(tree); //groupValidatorFunctions(tree.annotations.validationFunctions ?? []);
-        // for (const { constraints, node } of nodesWithConstraints) {
-        //   if (constraints['@Regexp']) {
-        //     mine.pattern = constraints['@Regexp'].pattern;
-        //   }
-        //   if (constraints['@IsInteger']) {
-        //     constraints['@IsInteger'].radix;
-        //   }
-        //   if (constraints['@Range']) {
-        //     const { min, max } = constraints['@Range'];
-        //     mine.minimum = min;
-        //     mine.maximum = max;
-        //   }
-        //   if (constraints['@Length']) {
-        //     const { min, max } = constraints['@Length'];
-        //     if (node.kind === 'root') {
-        //       if (hasNode(tree, 'string') && !hasNode(tree, 'array')) {
-        //         mine.minLength = min;
-        //         mine.maxLength = max;
-        //       }
-        //       if (hasNode(tree, 'array') && !hasNode(tree, 'string')) {
-        //         mine.minItems = min;
-        //         mine.maxItems = max;
-        //       }
-        //     }
-        //     if (node.kind === 'string') {
-        //       mine.minLength = min;
-        //       mine.maxLength = max;
-        //     }
-        //     if (node.kind === 'array') {
-        //       mine.minItems = min;
-        //       mine.maxItems = max;
-        //     }
-        //   }
-        //   if (constraints['@IsFQDN']) {
-        //     mine.format = 'hostname';
-        //   }
-        //   if (constraints['@IsUrl']) {
-        //     mine.format = 'url';
-        //   }
-        //   if (constraints['@IsEmail']) {
-        //     mine.format = 'email';
-        //   }
-        // }
-        // console.log(name, groupValidatorFunctions(tree.annotations.validationFunctions ?? []));
-        // console.log(name, { ...mine, ...apiModelProperties });
 
         Reflect.defineMetadata(
           DECORATORS.API_MODEL_PROPERTIES,
@@ -283,7 +229,7 @@ function getConstratintsFromDecorators(tree: RootNode): Partial<ApiPropertyOptio
 
     if (constraints['@Length']) {
       const { min, max } = constraints['@Length'];
-      console.log('@Length', node.kind, hasNode(tree, 'string'), hasNode(tree, 'array'));
+
       if (node.kind === 'root') {
         if (tree.children[0].kind === 'array') {
           options.minItems = min;
@@ -294,15 +240,6 @@ function getConstratintsFromDecorators(tree: RootNode): Partial<ApiPropertyOptio
           options.minLength = min;
           options.maxLength = max;
         }
-
-        // if (hasNode(tree, 'string') && !hasNode(tree, 'array')) {
-        //   options.minLength = min;
-        //   options.maxLength = max;
-        // }
-        // if (hasNode(tree, 'array') && !hasNode(tree, 'string')) {
-        //   options.minItems = min;
-        //   options.maxItems = max;
-        // }
       }
       if (node.kind === 'string') {
         options.minLength = min;

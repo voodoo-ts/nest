@@ -60,7 +60,7 @@ describe('ConfigModule', () => {
 
   it('should throw if env is not valid', async () => {
     delete process.env.secretValue123;
-    // console.log('!!!', process.env.secretValue123, ConfigModule.register(transformer, TestEnv));
+
     return expect(() => ConfigModule.register(transformer, TestEnv)).rejects.toEqual(
       new Error('Failed to parse environment'),
     );
