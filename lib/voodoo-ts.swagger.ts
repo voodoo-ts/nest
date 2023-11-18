@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
-import { ApiPropertyOptions, OmitType, PartialType, PickType, getSchemaPath } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptions, OmitType, PartialType, PickType, getSchemaPath } from '@nestjs/swagger';
 import { DECORATORS } from '@nestjs/swagger/dist/constants';
 import { ReferenceObject, SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 import { BaseTransformerInstance } from '@voodoo-ts/voodoo-ts';
@@ -162,7 +162,8 @@ export class SwaggerVoodoo {
       const additionalModels: Constructor<unknown>[] = [];
       const trees = this.transformer.getClassNode(cls).getClassTrees();
       for (const { name, tree } of trees) {
-        const apiModelProperties = Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, cls.prototype, name) ?? {};
+        const apiModelProperties: ApiPropertyOptions =
+          Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, cls.prototype, name) ?? {};
 
         const type = this.getType(tree as RootNode, (kind, node, cls, schemaClass) => {
           if (!this.additionalModels.includes(schemaClass)) {
@@ -186,6 +187,8 @@ export class SwaggerVoodoo {
           cls.prototype,
           name,
         );
+
+        ApiProperty({ ...mine, ...apiModelProperties })(cls.prototype, name);
 
         const propertiesArray = (Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES_ARRAY, cls.prototype) ??
           []) as string[];
