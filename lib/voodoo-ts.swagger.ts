@@ -263,6 +263,9 @@ function getConstratintsFromDecorators(tree: RootNode): Partial<ApiPropertyOptio
     if (constraints['@IsEmail']) {
       options.format = 'email';
     }
+    if (constraints['@IsISO8601']) {
+      options.format = 'date-time';
+    }
   }
   return options;
 }
