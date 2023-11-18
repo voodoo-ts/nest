@@ -31,6 +31,10 @@ enum TestEnum {
   BAR = 'bar',
 }
 
+interface ITestInterface {
+  interfaceProperty: string;
+}
+
 @swagger.apiModel()
 @Dto()
 class ApiModel {
@@ -81,6 +85,13 @@ class ApiModel {
   @Length(5, 10)
   testNumberArray!: number[];
 
+  testObjectLiteral!: {
+    page: number;
+    pages: number;
+  };
+
+  testInterface!: ITestInterface;
+
   testStringLiteral!: 'lit';
 
   testNumberLiteral!: 9001;
@@ -114,6 +125,8 @@ describe('OpenAPI', () => {
       ':testEnum',
       ':testArray',
       ':testNumberArray',
+      ':testObjectLiteral',
+      ':testInterface',
       ':testStringLiteral',
       ':testNumberLiteral',
       ':testBooleanLiteral',
@@ -170,6 +183,29 @@ describe('OpenAPI', () => {
         minItems: 5,
         maxItems: 10,
         isArray: false,
+      },
+      testInterface: {
+        isArray: false,
+        properties: {
+          interfaceProperty: {
+            type: 'string',
+          },
+        },
+        required: true,
+        type: 'object',
+      },
+      testObjectLiteral: {
+        isArray: false,
+        properties: {
+          page: {
+            type: 'number',
+          },
+          pages: {
+            type: 'number',
+          },
+        },
+        required: true,
+        type: 'object',
       },
       testStringLiteral: {
         example: 'lit',

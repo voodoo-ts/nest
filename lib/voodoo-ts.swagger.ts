@@ -108,6 +108,15 @@ export class SwaggerVoodoo {
         if (!cls) {
           // Materialize object literals and intterfaces
           if (node.meta.from === 'object' || node.meta.from === 'interface') {
+            return {
+              type: 'object',
+              properties: Object.fromEntries(
+                node
+                  .getClassTrees()
+                  .map((p) => [p.name, this.classTreeToSwagger(p.tree.children[0], registerMappedType)]),
+              ),
+            };
+
             throw new Error(`Object literals and interfaces are not supported at the moment`);
           }
           throw new Error(`Could not resolve class for ref ${ref}`);
@@ -167,7 +176,7 @@ export class SwaggerVoodoo {
         };
       }
       default:
-        throw new Error('');
+        throw new Error(`Unexpected node type: ${node.kind}`);
     }
   }
   getType(root: RootNode, registerMappedType: RegisterMappedType): Partial<ApiPropertyOptions> {
