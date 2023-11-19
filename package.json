@@ -24,23 +24,23 @@
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
-    "@types/jest": "29.5.7",
-    "@types/node": "20.8.10",
-    "@typescript-eslint/eslint-plugin": "^6.9.1",
-    "@typescript-eslint/parser": "^6.9.1",
+    "@types/jest": "29.5.8",
+    "@types/node": "20.9.2",
+    "@typescript-eslint/eslint-plugin": "^6.11.0",
+    "@typescript-eslint/parser": "^6.11.0",
     "@voodoo-ts/microrelease": "^0.0.0-beta.3",
-    "eslint": "^8.52.0",
+    "eslint": "^8.54.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-import": "^2.29.0",
-    "eslint-plugin-jsdoc": "^46.8.2",
+    "eslint-plugin-jsdoc": "^46.9.0",
     "eslint-plugin-prettier": "^5.0.1",
     "jest": "29.7.0",
     "jest-extended": "^4.0.2",
-    "prettier": "^3.0.3",
+    "prettier": "^3.1.0",
     "source-map-support": "^0.5.21",
     "supertest": "^6.3.3",
     "ts-jest": "29.1.1",
-    "ts-loader": "^9.5.0",
+    "ts-loader": "^9.5.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
   },
@@ -48,9 +48,9 @@
     "url": "https://github.com/voodoo-ts/nest"
   },
   "peerDependencies": {
-    "@voodoo-ts/voodoo-ts": ">=0.9.0",
     "@nestjs/common": ">=10.0.3",
     "@nestjs/swagger": ">=7.0.6",
-    "@nestjs/testing": ">=10.0.3"
+    "@nestjs/testing": ">=10.0.3",
+    "@voodoo-ts/voodoo-ts": ">=0.10.1"
   }
 }

@@ -1,9 +1,8 @@
+import { Transformed, TransformerInstance } from '@voodoo-ts/voodoo-ts';
 import {
   StringToBooleanValueTransformer,
   StringToNumberValueTransformer,
-  Transformed,
-  TransformerInstance,
-} from '@voodoo-ts/voodoo-ts';
+} from '@voodoo-ts/voodoo-ts/lib/value-transformers';
 import { AssertionError } from 'assert';
 
 import { VoodooTsModule } from './voodoo-ts.module';

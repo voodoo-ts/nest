@@ -36,6 +36,10 @@ export const Example = createAnnotationDecorator<[example: string]>({
   type: 'root',
 });
 
+export interface IApiModelOptions {
+  for: 'request' | 'response' | 'query';
+}
+
 export class SwaggerVoodoo {
   transformer: BaseTransformerInstance;
   additionalModels: Constructor<unknown>[] = [];
@@ -184,11 +188,15 @@ export class SwaggerVoodoo {
     return type;
   }
 
-  apiModel(): ClassDecorator {
+  apiModel(options: IApiModelOptions = { for: 'request' }): ClassDecorator {
     return (target: object): void => {
       const cls = target as Constructor<unknown>;
       const additionalModels: Constructor<unknown>[] = [];
-      const trees = this.transformer.getClassNode(cls).getClassTrees();
+      const classNode =
+        options.for === 'response'
+          ? this.transformer.getTransformationTargetClassNode(cls)
+          : this.transformer.getClassNode(cls);
+      const trees = classNode.getClassTrees();
       for (const { name, tree } of trees) {
         const apiModelProperties: ApiPropertyOptions =
           Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, cls.prototype, name) ?? {};
