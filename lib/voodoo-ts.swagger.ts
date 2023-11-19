@@ -200,6 +200,7 @@ export class SwaggerVoodoo {
           ? this.transformer.getTransformationTargetClassNode(cls)
           : this.transformer.getClassNode(cls);
       const trees = classNode.getClassTrees();
+
       for (const { name, tree } of trees) {
         const apiModelProperties: ApiPropertyOptions =
           Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, cls.prototype, name) ?? {};
@@ -234,7 +235,7 @@ export class SwaggerVoodoo {
   }
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  unwrap(): { additionalModels: Constructor<unknown>[]; ApiModel: () => ClassDecorator } {
+  unwrap(): { additionalModels: Constructor<unknown>[]; ApiModel: (options?: IApiModelOptions) => ClassDecorator } {
     return {
       additionalModels: this.additionalModels,
       // eslint-disable-next-line @typescript-eslint/naming-convention
