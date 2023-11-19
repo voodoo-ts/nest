@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ENVIRONMENT } from './voodoo-ts.tokens';
 import { From, TransformerInstance } from '@voodoo-ts/voodoo-ts';
 import { ConfigModule, InjectEnvironment, Secret, printEnv } from './config.module';
-import { SwaggerVoodoo } from './voodoo-ts.swagger';
+import { Example, SwaggerVoodoo } from './voodoo-ts.swagger';
 import { DECORATORS } from '@nestjs/swagger/dist/constants';
 import { IsEmail, IsFQDN, IsUrl, Length, Range, Regexp } from '@voodoo-ts/voodoo-ts/lib/decorators';
 import { Constructor } from '@voodoo-ts/voodoo-ts/lib/types';
@@ -99,6 +99,9 @@ class ApiModel {
   testBooleanLiteral!: true;
 
   testNullLiteral!: null;
+
+  @Example('example value')
+  testExample!: string;
 }
 
 function getMetadata(cls: Constructor<unknown>, name: string) {
@@ -131,6 +134,7 @@ describe('OpenAPI', () => {
       ':testNumberLiteral',
       ':testBooleanLiteral',
       ':testNullLiteral',
+      ':testExample',
     ]);
   });
 
@@ -229,6 +233,12 @@ describe('OpenAPI', () => {
       testNullLiteral: {
         nullable: true,
         required: true,
+      },
+      testExample: {
+        example: 'example value',
+        isArray: false,
+        required: true,
+        type: 'string',
       },
     });
   });

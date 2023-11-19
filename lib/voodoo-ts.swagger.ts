@@ -185,6 +185,9 @@ export class SwaggerVoodoo {
   }
   getType(root: RootNode, registerMappedType: RegisterMappedType): Partial<ApiPropertyOptions> {
     const type = this.classTreeToSwagger(root.children[0], registerMappedType) as ApiPropertyOptions;
+    if (root.annotations.example) {
+      type.example = root.annotations.example;
+    }
     return type;
   }
 
