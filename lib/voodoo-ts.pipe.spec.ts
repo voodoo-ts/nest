@@ -104,14 +104,14 @@ describe('', () => {
     );
   });
 
-  it('should transform valid boolean stringsn', async () => {
+  it('should transform valid boolean strings', async () => {
     const result = await pipe.transform('true', { metatype: Boolean, type: 'query', data: 'flag' });
 
     expect(result).toEqual(true);
   });
 
   it('should not transform invalid boolean strings', async () => {
-    const e = await getException(pipe.transform('a123', { metatype: Number, type: 'query', data: 'flag' }));
+    const e = await getException(pipe.transform('a123', { metatype: Boolean, type: 'query', data: 'flag' }));
 
     expect(e).toBeInstanceOf(Error);
     expectResponse(e);
@@ -121,5 +121,11 @@ describe('', () => {
         ['query:flag']: expect.any(Object),
       }),
     );
+  });
+
+  it('should transform valid string strings', async () => {
+    const result = await pipe.transform('true', { metatype: String, type: 'query', data: 'flag' });
+
+    expect(result).toEqual('true');
   });
 });

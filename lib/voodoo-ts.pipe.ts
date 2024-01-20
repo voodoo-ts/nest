@@ -26,6 +26,7 @@ export class ValidationPipe implements PipeTransform<unknown> {
   protected transformerInstance: TransformerInstance;
   protected numberTransformer: Constructor<unknown>;
   protected booleanTransformer: Constructor<unknown>;
+  protected stringTransformer: Constructor<unknown>;
   protected warnNotHandleable: boolean;
 
   protected logger: Logger = new Logger(this.constructor.name);
@@ -57,6 +58,12 @@ export class ValidationPipe implements PipeTransform<unknown> {
       value!: Transformed<string, number>;
     }
     this.numberTransformer = NumberTransformer;
+
+    @transformerInstance.transformerDecorator()
+    class StringTransformer {
+      value!: string;
+    }
+    this.stringTransformer = StringTransformer;
   }
 
   public async transform(value: unknown, metadata: ArgumentMetadata): Promise<unknown> {
@@ -117,33 +124,35 @@ export class ValidationPipe implements PipeTransform<unknown> {
       return value;
     }
     if (metatype === Boolean) {
-      const result = await this.transformerInstance.transform(
-        this.booleanTransformer as Constructor<{ value: boolean }>,
-        { value } as Record<string, unknown>,
-      );
-      if (result.success) {
-        return result.object.value;
-      } else {
-        throw this.exceptionFactory(result.errors);
-      }
+      return await this.runTransformer('booleanTransformer', value, metadata);
     } else if (metatype === Number) {
-      const result = await this.transformerInstance.transform(
-        this.numberTransformer as Constructor<{ value: number }>,
-        { value } as Record<string, unknown>,
-      );
-      if (result.success) {
-        return result.object.value;
-      } else {
-        const key = ['query', 'param'].includes(metadata.type) ? `${metadata.type}:${metadata.data}` : `unknown`;
-        const error: FormattedErrors = {
-          [key]: result.errors['$.value'],
-        };
-        throw this.exceptionFactory(error);
-      }
+      return await this.runTransformer('numberTransformer', value, metadata);
+    } else if (metatype === String) {
+      return await this.runTransformer('stringTransformer', value, metadata);
     } else {
       throw new Error(`Unknown type`);
     }
     return value;
+  }
+
+  protected async runTransformer(
+    transformer: 'stringTransformer' | 'booleanTransformer' | 'numberTransformer',
+    value: unknown,
+    metadata: ArgumentMetadata,
+  ): Promise<unknown> {
+    const result = await this.transformerInstance.transform(
+      this[transformer] as Constructor<{ value: unknown }>,
+      { value } as Record<string, unknown>,
+    );
+    if (result.success) {
+      return result.object.value;
+    } else {
+      const key = ['query', 'param'].includes(metadata.type) ? `${metadata.type}:${metadata.data}` : `unknown`;
+      const error: FormattedErrors = {
+        [key]: result.errors['$.value'],
+      };
+      throw this.exceptionFactory(error);
+    }
   }
 
   protected stripProtoKeys(value: any): void {
