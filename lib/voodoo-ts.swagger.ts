@@ -40,6 +40,18 @@ export interface IApiModelOptions {
   for: 'request' | 'response' | 'query';
 }
 
+export interface IUnwrapResult {
+  additionalModels: Constructor<unknown>[];
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  ApiModel: (options?: IApiModelOptions) => ClassDecorator;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  ApiRequestModel: (options?: Omit<IApiModelOptions, 'for'>) => ClassDecorator;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  ApiResponseModel: (options?: Omit<IApiModelOptions, 'for'>) => ClassDecorator;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  ApiQueryModel: (options?: Omit<IApiModelOptions, 'for'>) => ClassDecorator;
+}
+
 export class SwaggerVoodoo {
   transformer: BaseTransformerInstance;
   additionalModels: Constructor<unknown>[] = [];
@@ -235,11 +247,17 @@ export class SwaggerVoodoo {
   }
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  unwrap(): { additionalModels: Constructor<unknown>[]; ApiModel: (options?: IApiModelOptions) => ClassDecorator } {
+  unwrap(): IUnwrapResult {
     return {
       additionalModels: this.additionalModels,
       // eslint-disable-next-line @typescript-eslint/naming-convention
       ApiModel: this.apiModel.bind(this),
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      ApiRequestModel: (options: Omit<IApiModelOptions, 'for'> = {}) => this.apiModel({ for: 'request', ...options }),
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      ApiResponseModel: (options: Omit<IApiModelOptions, 'for'> = {}) => this.apiModel({ for: 'response', ...options }),
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      ApiQueryModel: (options: Omit<IApiModelOptions, 'for'> = {}) => this.apiModel({ for: 'query', ...options }),
     };
   }
 }
