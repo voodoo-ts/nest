@@ -49,19 +49,19 @@ export class ValidationPipe implements PipeTransform<unknown> {
 
     @transformerInstance.transformerDecorator()
     class BooleanTransformer {
-      value!: Transformed<string, boolean>;
+      value?: Transformed<string, boolean>;
     }
     this.booleanTransformer = BooleanTransformer;
 
     @transformerInstance.transformerDecorator()
     class NumberTransformer {
-      value!: Transformed<string, number>;
+      value?: Transformed<string, number>;
     }
     this.numberTransformer = NumberTransformer;
 
     @transformerInstance.transformerDecorator()
     class StringTransformer {
-      value!: string;
+      value?: string;
     }
     this.stringTransformer = StringTransformer;
   }
