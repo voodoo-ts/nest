@@ -73,6 +73,9 @@ export class ValidationPipe implements PipeTransform<unknown> {
 
     const metatype = metadata.metatype;
     if (!metatype || !this.toValidate(metadata)) {
+      if (value === undefined) {
+        return undefined;
+      }
       return await this.transformPrimitive(value, metadata);
     }
 
