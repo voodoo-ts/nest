@@ -1,12 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
-import { ENVIRONMENT } from './voodoo-ts.tokens';
-import { From, TransformerInstance } from '@voodoo-ts/voodoo-ts';
-import { ConfigModule, InjectEnvironment, Secret, printEnv } from './config.module';
-import { Example, SwaggerVoodoo } from './voodoo-ts.swagger';
 import { DECORATORS } from '@nestjs/swagger/dist/constants';
+import { TransformerInstance } from '@voodoo-ts/voodoo-ts';
 import { IsEmail, IsFQDN, IsUrl, Length, Range, Regexp } from '@voodoo-ts/voodoo-ts/lib/decorators';
 import { Constructor } from '@voodoo-ts/voodoo-ts/lib/types';
+
+import { Example, SwaggerVoodoo } from './voodoo-ts.swagger';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const { Dto, transformer } = TransformerInstance.withDefaultProject({}).unwrap();

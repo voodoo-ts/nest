@@ -52,6 +52,14 @@ export interface IUnwrapResult {
   ApiQueryModel: (options?: Omit<IApiModelOptions, 'for'>) => ClassDecorator;
 }
 
+export function getClassNameFromNameOrImport(s: string): string {
+  const match = s.match(/^import\(.+?\)\.(?<name>.+?)$/);
+  if (match?.groups?.name) {
+    return match.groups.name;
+  }
+  return s;
+}
+
 export class SwaggerVoodoo {
   transformer: BaseTransformerInstance;
   additionalModels: Constructor<unknown>[] = [];
@@ -100,7 +108,7 @@ export class SwaggerVoodoo {
         };
       case 'enum': {
         return {
-          enumName: node.name,
+          enumName: getClassNameFromNameOrImport(node.name),
           enum: node.allowedValues,
           type: 'enum',
         };
