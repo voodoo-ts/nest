@@ -48,9 +48,9 @@
     "url": "https://github.com/voodoo-ts/nest"
   },
   "peerDependencies": {
-    "@nestjs/common": ">=10.0.3",
-    "@nestjs/swagger": ">=7.0.6",
-    "@nestjs/testing": ">=10.0.3",
+    "@nestjs/common": ">=10.3.8",
+    "@nestjs/swagger": ">=7.3.1",
+    "@nestjs/testing": ">=10.3.8",
     "@voodoo-ts/voodoo-ts": ">=0.10.5"
   }
 }
