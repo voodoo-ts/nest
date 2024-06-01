@@ -51,6 +51,6 @@
     "@nestjs/common": ">=10.0.3",
     "@nestjs/swagger": ">=7.0.6",
     "@nestjs/testing": ">=10.0.3",
-    "@voodoo-ts/voodoo-ts": ">=0.10.1"
+    "@voodoo-ts/voodoo-ts": ">=0.10.5"
   }
 }
