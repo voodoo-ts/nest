@@ -1,17 +1,10 @@
-import { Transformed, TransformerInstance } from '@voodoo-ts/voodoo-ts';
-import {
-  StringToBooleanValueTransformer,
-  StringToNumberValueTransformer,
-} from '@voodoo-ts/voodoo-ts/lib/value-transformers';
+import { Controller, Get, Query } from '@nestjs/common';
+import { Transformed } from '@voodoo-ts/voodoo-ts';
 import { AssertionError } from 'assert';
 
-import { VoodooTsModule } from './voodoo-ts.module';
+import { Dto, app, transformer } from './test/app';
 import { ValidationPipe } from './voodoo-ts.pipe';
-
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const { Dto, transformer } = TransformerInstance.withDefaultProject({
-  additionalValueTransformerFactories: [new StringToBooleanValueTransformer(), new StringToNumberValueTransformer()],
-}).unwrap();
+import { SwaggerVoodoo } from './voodoo-ts.swagger';
 
 async function getException(p: Promise<unknown>): Promise<unknown> {
   try {
@@ -39,11 +32,6 @@ describe('', () => {
 
   it('should construct', () => {
     expect(pipe).toBeTruthy();
-  });
-
-  it('should construct the module', () => {
-    const module = new VoodooTsModule();
-    expect(module).toBeTruthy();
   });
 
   it('should transform valid @Query() param: Dto', async () => {
@@ -123,9 +111,60 @@ describe('', () => {
     );
   });
 
-  it('should transform valid string strings', async () => {
+  it('should transform valid strings', async () => {
     const result = await pipe.transform('true', { metatype: String, type: 'query', data: 'flag' });
 
     expect(result).toEqual('true');
+  });
+});
+
+const swagger = new SwaggerVoodoo(transformer);
+
+describe('@Query', () => {
+  let query: object | undefined;
+
+  @swagger.apiModel({ for: 'query' })
+  @Dto()
+  class TestDto {
+    ids!: string[];
+    tests?: string[];
+  }
+
+  @Controller('/')
+  class TestController {
+    @Get('/')
+    test(@Query() q: TestDto): string {
+      query = q;
+      return 'test';
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/promise-function-async
+  beforeEach(() => {
+    return app.bootstrap([TestController]);
+  });
+  // eslint-disable-next-line @typescript-eslint/promise-function-async
+  afterEach(() => {
+    query = undefined;
+    return app.nestApplication.close();
+  });
+
+  it('should fail if required query array is not provided', async () => {
+    const response = await app.request.get('/');
+
+    expect(response.ok).toBeFalsy();
+  });
+  it('should fix up arrays with 1 elements ', async () => {
+    const response = await app.request.get('/').query({ ids: ['a'] });
+
+    expect(response.ok).toBe(true);
+    expect(query).toEqual({ ids: ['a'] });
+  });
+
+  it('should handle arrays with 2 elements', async () => {
+    const response = await app.request.get('/').query({ ids: ['a', 'b'] });
+
+    expect(response.ok).toBe(true);
+    expect(query).toEqual({ ids: ['a', 'b'] });
   });
 });

@@ -119,13 +119,17 @@ export class ValidationPipe implements PipeTransform<unknown> {
     if (type === 'custom') {
       return false;
     }
-    const types = [String, Boolean, Number, Array, Object, Buffer];
-    return !types.some((t) => metatype === t) && !isNil(metatype);
+    const validTypes = [String, Boolean, Number, Array, Object, Buffer];
+    return !validTypes.some((t) => metatype === t) && !isNil(metatype);
   }
 
   protected async transformPrimitive(value: unknown, metadata: ArgumentMetadata): Promise<unknown> {
-    if (this.warnNotHandleable && (metadata.metatype === Object || metadata.metatype === Array)) {
-      this.logger.warn(`Can't validate/transform ${metadata}`);
+    if (
+      this.warnNotHandleable &&
+      metadata.type !== 'custom' &&
+      (metadata.metatype === Object || metadata.metatype === Array)
+    ) {
+      this.logger.warn(`Can't validate/transform ${JSON.stringify(metadata)}`);
     }
 
     if (!metadata.data) {
@@ -168,7 +172,7 @@ export class ValidationPipe implements PipeTransform<unknown> {
     }
   }
 
-  protected stripProtoKeys(value: any): void {
+  protected stripProtoKeys(value: unknown): void {
     if (value == null || typeof value !== 'object' || types.isTypedArray(value)) {
       return;
     }
@@ -178,10 +182,12 @@ export class ValidationPipe implements PipeTransform<unknown> {
       }
       return;
     }
-    delete value.__proto__;
+    if ('__proto__' in value) {
+      delete value.__proto__;
+    }
     // eslint-disable-next-line guard-for-in, no-restricted-syntax
     for (const key in value) {
-      this.stripProtoKeys(value[key]);
+      this.stripProtoKeys(value[key as keyof typeof value]);
     }
   }
 }
