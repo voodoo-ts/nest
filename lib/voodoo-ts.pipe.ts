@@ -79,9 +79,19 @@ export class ValidationPipe implements PipeTransform<unknown> {
       return await this.transformPrimitive(value, metadata);
     }
 
-    value = value !== null && value !== undefined ? value : {};
+    const obj = (value ?? {}) as Record<string, unknown>;
 
     this.stripProtoKeys(value);
+
+    if (metadata.type === 'query') {
+      for (const { name, tree } of this.transformerInstance.getClassNode(metatype).getClassTrees()) {
+        if (tree.children[0].kind === 'array') {
+          if (!Array.isArray(obj[name]) && name in obj) {
+            obj[name] = [obj[name]];
+          }
+        }
+      }
+    }
 
     const transformResult = await this.transformerInstance.transform(metatype, value as Record<string, unknown>);
     if (!transformResult.success) {

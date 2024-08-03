@@ -71,7 +71,7 @@ export class SwaggerVoodoo {
   classTreeToSwagger(
     node: TypeNode,
     registerMappedType: RegisterMappedType,
-  ): SchemaObject | (ReferenceObject & { enumName?: string }) {
+  ): SchemaObject | (ReferenceObject & { enumName?: string }) | (SchemaObject & { isArray: boolean }) {
     switch (node.kind) {
       case 'string':
       case 'number':
@@ -140,8 +140,6 @@ export class SwaggerVoodoo {
                   .map((p) => [p.name, this.classTreeToSwagger(p.tree.children[0], registerMappedType)]),
               ),
             };
-
-            throw new Error(`Object literals and interfaces are not supported at the moment`);
           }
           throw new Error(`Could not resolve class for ref ${ref}`);
         }
@@ -186,8 +184,8 @@ export class SwaggerVoodoo {
       }
       case 'array': {
         return {
-          type: 'array',
-          items: this.classTreeToSwagger(node.children[0], registerMappedType),
+          isArray: true,
+          ...this.classTreeToSwagger(node.children[0], registerMappedType),
         };
       }
       case 'tuple': {
@@ -203,6 +201,7 @@ export class SwaggerVoodoo {
         throw new Error(`Unexpected node type: ${node.kind}`);
     }
   }
+
   getType(root: RootNode, registerMappedType: RegisterMappedType): Partial<ApiPropertyOptions> {
     const type = this.classTreeToSwagger(root.children[0], registerMappedType) as ApiPropertyOptions;
     if (root.annotations.example) {

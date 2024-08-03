@@ -99,9 +99,11 @@ class ApiModel {
 
   @Example('example value')
   testExample!: string;
+
+  testNestedArray!: string[][];
 }
 
-function getMetadata(cls: Constructor<unknown>, name: string) {
+function getMetadata(cls: Constructor<unknown>, name: string): unknown {
   return Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, cls.prototype, name);
 }
 
@@ -132,6 +134,7 @@ describe('OpenAPI', () => {
       ':testBooleanLiteral',
       ':testNullLiteral',
       ':testExample',
+      ':testNestedArray',
     ]);
   });
 
@@ -170,20 +173,18 @@ describe('OpenAPI', () => {
       },
       testEnum: { type: 'string', enumName: 'TestEnum', enum: ['test', 'bar'], required: true, isArray: false },
       testArray: {
-        type: 'array',
-        items: { type: 'string' },
+        type: 'string',
         required: true,
         minItems: 5,
         maxItems: 10,
-        isArray: false,
+        isArray: true,
       },
       testNumberArray: {
-        type: 'array',
-        items: { type: 'number' },
+        type: 'number',
         required: true,
         minItems: 5,
         maxItems: 10,
-        isArray: false,
+        isArray: true,
       },
       testInterface: {
         isArray: false,
@@ -236,6 +237,11 @@ describe('OpenAPI', () => {
         isArray: false,
         required: true,
         type: 'string',
+      },
+      testNestedArray: {
+        type: 'string',
+        required: true,
+        isArray: true,
       },
     });
   });
