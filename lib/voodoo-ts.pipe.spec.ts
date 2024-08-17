@@ -4,7 +4,7 @@ import { AssertionError } from 'assert';
 
 import { Dto, app, transformer } from './test/app';
 import { ValidationPipe } from './voodoo-ts.pipe';
-import { SwaggerVoodoo } from './voodoo-ts.swagger';
+import { OpenApiVoodoo } from './voodoo-ts.swagger';
 
 async function getException(p: Promise<unknown>): Promise<unknown> {
   try {
@@ -118,7 +118,7 @@ describe('', () => {
   });
 });
 
-const swagger = new SwaggerVoodoo(transformer);
+const swagger = new OpenApiVoodoo(transformer);
 
 describe('@Query', () => {
   let query: object | undefined;
