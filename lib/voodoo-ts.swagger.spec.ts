@@ -3,21 +3,21 @@ import { TransformerInstance } from '@voodoo-ts/voodoo-ts';
 import { IsEmail, IsFQDN, IsUrl, Length, Range, Regexp } from '@voodoo-ts/voodoo-ts/lib/decorators';
 import { Constructor } from '@voodoo-ts/voodoo-ts/lib/types';
 
-import { Example, SwaggerVoodoo } from './voodoo-ts.swagger';
+import { Example, OpenApiVoodoo } from './voodoo-ts.swagger';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const { Dto, transformer } = TransformerInstance.withDefaultProject({}).unwrap();
 
-const swagger = new SwaggerVoodoo(transformer);
+const openApi = new OpenApiVoodoo(transformer);
 
-@swagger.apiModel()
+@openApi.apiModel()
 @Dto()
 class Embed {
   name!: string;
   email!: string;
 }
 
-@swagger.apiModel()
+@openApi.apiModel()
 @Dto()
 class Password {
   password!: string;
@@ -32,7 +32,7 @@ interface ITestInterface {
   interfaceProperty: string;
 }
 
-@swagger.apiModel()
+@openApi.apiModel()
 @Dto()
 class ApiModel {
   /**
@@ -108,6 +108,10 @@ function getMetadata(cls: Constructor<unknown>, name: string): unknown {
 }
 
 describe('OpenAPI', () => {
+  it('should process', () => {
+    openApi.processApiModels();
+  });
+
   it('should have added all properties to the class', () => {
     const propertiesArray = Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES_ARRAY, ApiModel.prototype);
     expect(propertiesArray).toEqual([
@@ -247,9 +251,9 @@ describe('OpenAPI', () => {
   });
 
   it('should track additional models', () => {
-    expect(new Set(swagger.additionalModels).size).toEqual(swagger.additionalModels.length);
+    expect(new Set(openApi.additionalModels).size).toEqual(openApi.additionalModels.length);
 
-    expect(new Set(swagger.additionalModels.map((cls) => cls.name))).toEqual(
+    expect(new Set(openApi.additionalModels.map((cls) => cls.name))).toEqual(
       new Set(['Pick<Embed, name>', 'Omit<Embed, name>', 'Partial<Embed>', 'Embed', 'Password']),
     );
   });

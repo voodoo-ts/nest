@@ -60,15 +60,16 @@ export function getClassNameFromNameOrImport(s: string): string {
   return s;
 }
 
-export class SwaggerVoodoo {
+export class OpenApiVoodoo {
   transformer: BaseTransformerInstance;
   additionalModels: Constructor<unknown>[] = [];
+  targets: Map<object, IApiModelOptions> = new Map();
 
   constructor(transformer: BaseTransformerInstance) {
     this.transformer = transformer;
   }
 
-  classTreeToSwagger(
+  classTreeToOpenApi(
     node: TypeNode,
     registerMappedType: RegisterMappedType,
   ): SchemaObject | (ReferenceObject & { enumName?: string }) | (SchemaObject & { isArray: boolean }) {
@@ -116,7 +117,7 @@ export class SwaggerVoodoo {
       case 'union': {
         const unionWithoutNull = node.children
           .filter((n) => !isNullNode(n))
-          .map((n) => this.classTreeToSwagger(n, registerMappedType));
+          .map((n) => this.classTreeToOpenApi(n, registerMappedType));
         if (unionWithoutNull.length > 1) {
           return {
             oneOf: unionWithoutNull,
@@ -137,7 +138,7 @@ export class SwaggerVoodoo {
               properties: Object.fromEntries(
                 node
                   .getClassTrees()
-                  .map((p) => [p.name, this.classTreeToSwagger(p.tree.children[0], registerMappedType)]),
+                  .map((p) => [p.name, this.classTreeToOpenApi(p.tree.children[0], registerMappedType)]),
               ),
             };
           }
@@ -185,7 +186,7 @@ export class SwaggerVoodoo {
       case 'array': {
         return {
           isArray: true,
-          ...this.classTreeToSwagger(node.children[0], registerMappedType),
+          ...this.classTreeToOpenApi(node.children[0], registerMappedType),
         };
       }
       case 'tuple': {
@@ -194,7 +195,7 @@ export class SwaggerVoodoo {
 
       case 'intersection': {
         return {
-          allOf: node.children.map((n) => this.classTreeToSwagger(n, registerMappedType)),
+          allOf: node.children.map((n) => this.classTreeToOpenApi(n, registerMappedType)),
         };
       }
       default:
@@ -203,54 +204,63 @@ export class SwaggerVoodoo {
   }
 
   getType(root: RootNode, registerMappedType: RegisterMappedType): Partial<ApiPropertyOptions> {
-    const type = this.classTreeToSwagger(root.children[0], registerMappedType) as ApiPropertyOptions;
+    const type = this.classTreeToOpenApi(root.children[0], registerMappedType) as ApiPropertyOptions;
     if (root.annotations.example) {
       type.example = root.annotations.example;
     }
     return type;
   }
-
   apiModel(options: IApiModelOptions = { for: 'request' }): ClassDecorator {
     return (target: object): void => {
-      const cls = target as Constructor<unknown>;
-      const additionalModels: Constructor<unknown>[] = [];
-      const classNode =
-        options.for === 'response'
-          ? this.transformer.getTransformationTargetClassNode(cls)
-          : this.transformer.getClassNode(cls);
-      const trees = classNode.getClassTrees();
-
-      for (const { name, tree } of trees) {
-        const apiModelProperties: ApiPropertyOptions =
-          Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, cls.prototype, name) ?? {};
-
-        const type = this.getType(tree as RootNode, (kind, node, cls, schemaClass) => {
-          if (!this.additionalModels.includes(schemaClass)) {
-            this.additionalModels.push(schemaClass);
-          }
-          if (!additionalModels.includes(schemaClass)) {
-            additionalModels.push(schemaClass);
-          }
-        });
-        const mine: ApiPropertyOptions = {
-          type: 'unknown',
-          ...type,
-          ...getDescriptionAndExamples(tree.annotations.comment),
-          ...getRequiredAndNullable(tree as RootNode),
-          ...getConstratintsFromDecorators(tree as RootNode),
-        };
-
-        ApiProperty({ ...mine, ...apiModelProperties })(cls.prototype, name);
-
-        const propertiesArray = (Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES_ARRAY, cls.prototype) ??
-          []) as string[];
-        if (!propertiesArray.includes(`:${name}`)) {
-          propertiesArray.push(`:${name}`);
-        }
-        Reflect.defineMetadata(DECORATORS.API_MODEL_PROPERTIES_ARRAY, propertiesArray, cls.prototype);
-      }
-      Reflect.defineMetadata('voodoo/additionalModels', additionalModels, cls.prototype);
+      this.targets.set(target, options);
     };
+  }
+
+  processApiModel(target: object, options: IApiModelOptions = { for: 'request' }): void {
+    const cls = target as Constructor<unknown>;
+    const additionalModels: Constructor<unknown>[] = [];
+    const classNode =
+      options.for === 'response'
+        ? this.transformer.getTransformationTargetClassNode(cls)
+        : this.transformer.getClassNode(cls);
+    const trees = classNode.getClassTrees();
+
+    for (const { name, tree } of trees) {
+      const apiModelProperties: ApiPropertyOptions =
+        Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, cls.prototype, name) ?? {};
+
+      const type = this.getType(tree as RootNode, (kind, node, cls, schemaClass) => {
+        if (!this.additionalModels.includes(schemaClass)) {
+          this.additionalModels.push(schemaClass);
+        }
+        if (!additionalModels.includes(schemaClass)) {
+          additionalModels.push(schemaClass);
+        }
+      });
+      const mine: ApiPropertyOptions = {
+        type: 'unknown',
+        ...type,
+        ...getDescriptionAndExamples(tree.annotations.comment),
+        ...getRequiredAndNullable(tree as RootNode),
+        ...getConstratintsFromDecorators(tree as RootNode),
+      };
+
+      ApiProperty({ ...mine, ...apiModelProperties })(cls.prototype, name);
+
+      const propertiesArray = (Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES_ARRAY, cls.prototype) ??
+        []) as string[];
+      if (!propertiesArray.includes(`:${name}`)) {
+        propertiesArray.push(`:${name}`);
+      }
+      Reflect.defineMetadata(DECORATORS.API_MODEL_PROPERTIES_ARRAY, propertiesArray, cls.prototype);
+    }
+    Reflect.defineMetadata('voodoo/additionalModels', additionalModels, cls.prototype);
+  }
+
+  processApiModels(): void {
+    for (const [cls, options] of this.targets.entries()) {
+      this.processApiModel(cls, options);
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -276,7 +286,7 @@ interface INodeWithConstraints {
 
 function getConstratintsFromDecorators(tree: RootNode): Partial<ApiPropertyOptions> {
   const options: Partial<ApiPropertyOptions> = {};
-  const nodesWithConstraints = getAllPropertyValidatorMetadataMappings(tree); //groupValidatorFunctions(tree.annotations.validationFunctions ?? []);
+  const nodesWithConstraints = getAllPropertyValidatorMetadataMappings(tree);
   for (const { constraints, node } of nodesWithConstraints) {
     if (constraints['@Regexp']) {
       options.pattern = constraints['@Regexp'].pattern;

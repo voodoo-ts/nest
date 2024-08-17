@@ -81,7 +81,7 @@ it can't validate.
 
 ## Swagger
 
-Create an instance of the `SwaggerVoodoo` class in your central `voodoo.instance.ts`, or whereever you like
+Create an instance of the `OpenApiVoodoo` class in your central `voodoo.instance.ts`, or whereever you like.
 
 ```ts
 // voodoo.instance.ts
@@ -96,11 +96,13 @@ export const voodoo = TransformerInstance.withDefaultProject({
   additionalValueTransformerFactories: [new StringToNumberValueTransformer(), new StringToBooleanValueTransformer()],
 });
 
-export const { ApiModel, additionalModels } = new SwaggerVoodoo(voodoo).unwrap();
+export const { ApiModel, additionalModels } = new OpenApiVoodoo(voodoo).unwrap();
 ```
 
 Now can use `@ApiModel()` to decorate Dto classes. This will ensure all properties are wrapped with `@ApiProperty()` and enrich
-their Swagger types and documentation. It's still recommended to enable the swagger-cli plugin from NestJS, but you should disable
+their Swagger types and documentation.
+Call the `processApiModels()` method after all imports are settled, preferably in main.ts.
+It's still recommended to enable the swagger-cli plugin from NestJS, but you should disable
 the class-validator shims
 
 ```json
