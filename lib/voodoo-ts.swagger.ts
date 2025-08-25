@@ -69,10 +69,7 @@ export class OpenApiVoodoo {
     this.transformer = transformer;
   }
 
-  classTreeToOpenApi(
-    node: TypeNode,
-    registerMappedType: RegisterMappedType,
-  ): SchemaObject | (ReferenceObject & { enumName?: string }) | (SchemaObject & { isArray: boolean }) {
+  classTreeToOpenApi(node: TypeNode, registerMappedType: RegisterMappedType): ApiPropertyOptions {
     switch (node.kind) {
       case 'string':
       case 'number':
@@ -117,13 +114,27 @@ export class OpenApiVoodoo {
       case 'union': {
         const unionWithoutNull = node.children
           .filter((n) => !isNullNode(n))
-          .map((n) => this.classTreeToOpenApi(n, registerMappedType));
+          .map((n) => this.classTreeToOpenApi(n, registerMappedType))
+          .map((opts) => {
+            const { type, ...rest } = opts;
+            if (type) {
+              if (typeof type !== 'string' && typeof type !== 'object') {
+                return { ...rest, type: getSchemaPath(type) };
+              } else {
+                // console.log('OPTS', opts);
+                // throw new Error(`Can't translate type: ${type}`);
+                return opts;
+              }
+            } else {
+              return { type, ...rest };
+            }
+          });
         if (unionWithoutNull.length > 1) {
           return {
-            oneOf: unionWithoutNull,
+            oneOf: unionWithoutNull as SchemaObject[],
           };
         } else {
-          return { type: 'unknown', ...unionWithoutNull[0] };
+          return { ...unionWithoutNull[0] };
         }
       }
       case 'class': {
@@ -139,7 +150,7 @@ export class OpenApiVoodoo {
                 node
                   .getClassTrees()
                   .map((p) => [p.name, this.classTreeToOpenApi(p.tree.children[0], registerMappedType)]),
-              ),
+              ) as Record<string, SchemaObject | ReferenceObject>,
             };
           }
           throw new Error(`Could not resolve class for ref ${ref}`);
@@ -154,8 +165,7 @@ export class OpenApiVoodoo {
           registerMappedType('partial', node, cls, PartialSchema);
 
           return {
-            type: 'object',
-            $ref: getSchemaPath(PartialSchema),
+            type: getSchemaPath(PartialSchema),
           };
         } else if (node.meta.picked) {
           const fields = Array.from(node.meta.picked);
@@ -165,7 +175,7 @@ export class OpenApiVoodoo {
             writable: false,
           });
           registerMappedType('pick', node, cls, PickSchema);
-          return { type: 'object', $ref: getSchemaPath(PickSchema) };
+          return { type: getSchemaPath(PickSchema) };
         } else if (node.meta.omitted) {
           const fields = Array.from(node.meta.omitted);
           class OmitSchema extends OmitType<any, string>(cls, fields) {}
@@ -174,12 +184,11 @@ export class OpenApiVoodoo {
             writable: false,
           });
           registerMappedType('omit', node, cls, OmitSchema);
-          return { type: 'object', $ref: getSchemaPath(OmitSchema) };
+          return { type: getSchemaPath(OmitSchema) };
         } else {
           registerMappedType('class', node, cls, cls);
           return {
-            $ref: getSchemaPath(cls),
-            type: 'object',
+            type: cls,
           };
         }
       }
@@ -195,7 +204,7 @@ export class OpenApiVoodoo {
 
       case 'intersection': {
         return {
-          allOf: node.children.map((n) => this.classTreeToOpenApi(n, registerMappedType)),
+          allOf: node.children.map((n) => this.classTreeToOpenApi(n, registerMappedType)) as SchemaObject[],
         };
       }
       default:
@@ -204,7 +213,7 @@ export class OpenApiVoodoo {
   }
 
   getType(root: RootNode, registerMappedType: RegisterMappedType): Partial<ApiPropertyOptions> {
-    const type = this.classTreeToOpenApi(root.children[0], registerMappedType) as ApiPropertyOptions;
+    const type = this.classTreeToOpenApi(root.children[0], registerMappedType);
     if (root.annotations.example) {
       type.example = root.annotations.example;
     }
@@ -354,36 +363,8 @@ function getAllPropertyValidatorMetadataMappings(node: TypeNode): INodeWithConst
   return nodeAndConstraints;
 }
 
-function hasNode(node: TypeNode, kind: TypeNode['kind']): boolean {
-  if (node.kind === kind) {
-    return true;
-  }
-  for (const c of node.children) {
-    if (hasNode(c, kind)) {
-      return true;
-    }
-  }
-  return false;
-}
-
 function isNullNode(n: TypeNode): boolean {
   return Boolean(n.kind === 'literal' && n.expected === null);
-}
-
-function groupCommentTags(comment?: IPropertyComment): Map<string, string[]> {
-  const map = new Map<string, string[]>();
-
-  if (!comment) {
-    return map;
-  }
-
-  for (const c of comment.tags) {
-    const l = map.get(c.tagName) ?? [];
-    l.push(c.text);
-    map.set(c.text, l);
-  }
-
-  return map;
 }
 
 const getDescriptionAndExamples = (comment?: IPropertyComment): Partial<ApiPropertyOptions> => {
@@ -430,5 +411,6 @@ export function getAdditionalModels(...classes: Constructor<unknown>[]): Constru
 
 /* istanbul ignore next */
 export function debug(obj: unknown): void {
+  // eslint-disable-next-line no-console
   console.dir(obj, { depth: null, colors: true });
 }
